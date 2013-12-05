@@ -1,0 +1,2 @@
+defmodule Numbermind do
+end
