@@ -6,7 +6,7 @@ defmodule NumbermindTest do
   end
   
   test "check win" do
-    assert  Numbermind.checkwin([1, 2, 3, 4], [3, 5, 6, 4]) == ["-", "-", "O", "X"]
+    assert  Numbermind.compareGuess([1, 2, 3, 4], [3, 5, 6, 4]) == ["X", "O", "-", "-"]
   end
   
   test "check getRandomAnswerList size" do
