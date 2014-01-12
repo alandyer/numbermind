@@ -1,23 +1,55 @@
 defmodule Numbermind do
 
   def compareGuess(guess, answer) do
-    compareGuess(guess, answer, 1, []) |> Enum.sort |> Enum.reverse
+    compareGuess(guess, answer, []) |> Enum.sort |> Enum.reverse
   end
   
-  def compareGuess([], answer, digit, acc) do
+  def compareGuess([], answer, acc) do
     acc
   end
-  def compareGuess([guess|rest], answer, digit, acc) do
-    cond do
-      guess == Enum.at(answer, digit - 1) ->
-        compareGuess(rest, removeFirst(guess, answer), digit, ["X" | acc])
-      Enum.member?(answer, guess) ->
-        compareGuess(rest, removeFirst(guess, answer), digit, ["O" | acc])
-      true ->
-        compareGuess(rest, answer, digit + 1, ["-" | acc])
-    end
+  def compareGuess(guess, answer, acc) do
+    #IO.inspect("Comparing #{inspect guess} to #{inspect answer}") #debug
+    {xList, xLessGuess, xLessAnswer} = getXList(guess, answer)
+    {olist, olessGuess, olessAnswer} = getOList(xLessGuess, xLessAnswer)
+    dashList = getDashList(length(olessAnswer))
+    xList ++ olist ++ dashList
   end
   
+  def getXList(guess, answer) do
+    getXList(guess, answer, [], [], [])
+  end
+  def getXList([], [], xlist, xlessGuess, xlessAnswer) do
+    {xlist, xlessGuess, xlessAnswer}
+  end
+  def getXList([guessHead | guess], [answerHead | answer], xlist, xlessGuess, xlessAnswer) do
+    cond do
+      guessHead == answerHead ->
+        getXList(guess, answer, ["X" | xlist], xlessGuess, xlessAnswer)
+      true ->
+        getXList(guess, answer, xlist, [guessHead | xlessGuess], [answerHead | xlessAnswer])
+    end
+  end
+
+  def getOList(guess, answer) do
+    getOList(guess, answer, [], [])
+  end
+  def getOList([], answer, oList, olessGuess) do
+    {oList, olessGuess, answer}
+  end
+  def getOList([guessHead | guess], answer, oList, olessGuess) do
+    cond do
+      Enum.member?(answer, guessHead) ->
+        getOList(guess, removeFirst(guessHead, answer), ["O" | oList], olessGuess)
+      true ->
+        getOList(guess, answer, oList, olessGuess)
+    end
+  end
+  def getDashList(size) when size <= 0 do
+    []
+  end
+  def getDashList(size) do
+    ["-" | getDashList(size - 1)]
+  end
   def removeFirst(element, collection) do
     removeFirst(element, collection, []) |> Enum.reverse
   end
@@ -41,7 +73,7 @@ defmodule Numbermind do
       
 
   def compareGuessVeryEasy(guess, answer) do
-    compareGuess(guess, answer, 1, [])
+    compareGuessVeryEasy(guess, answer, 1, [])
   end
 
   def compareGuessVeryEasy([], answer, digit, acc) do
@@ -60,7 +92,7 @@ defmodule Numbermind do
 
   def mainLoop() do
     :random.seed(:erlang.now())
-    input = String.strip(IO.gets("Would you like to play a game of Numbermind? "))
+    input = String.strip(IO.gets("Would you like to play a game of Numbermind?[y/n] "))
     cond do
       input == :eof ->
         IO.puts("System Encountered an error during input")
@@ -83,6 +115,7 @@ defmodule Numbermind do
 
   def newGame() do
     answer = getRandomAnswerList(4)
+    #IO.puts(:io.format("Answer is ~p", [answer]))
     maxGuesses = 10
     results = guessLoop(answer, maxGuesses, [], [])
   end
@@ -90,6 +123,7 @@ defmodule Numbermind do
   def guessLoop(answer, guessesLeft, guesses, results) do
     cond do
       guessesLeft <= 0 ->
+        IO.puts(:io.format("Answer was ~p", [answer])) 
         {:loss, :maxGuessesReached}
       true ->
         newGuessRaw = String.strip(IO.gets("What is your guess? "))
@@ -114,4 +148,4 @@ defmodule Numbermind do
     Stream.repeatedly(fn -> :random.uniform(10) - 1 end) |> Enum.take size
   end
 
-end   
+end
